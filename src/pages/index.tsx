@@ -151,9 +151,9 @@ const IndexPage: NextPage<propType> = (props) => {
         <hr />
         <Card className="mt-3">
           <Card.Body>
-            <Card.Title className="tx-header">Hight-light</Card.Title>
+            <Card.Title className="tx-header">Highlight</Card.Title>
             <Card.Subtitle className="mb-2 text-muted tx-subtitle">
-              Stock <Badge>{selStockSymbol}</Badge> hight-light and current
+              Stock <Badge>{selStockSymbol}</Badge> Highlight and current
               information.
             </Card.Subtitle>
             <Container fluid>
