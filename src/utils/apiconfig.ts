@@ -1,3 +1,3 @@
-const apiHost = "http://localhost:3000/api2"
+const apiHost = "https://anlze-api.vercel.app/api2"
 
 export default apiHost;

@@ -5,3 +5,47 @@
 .tx-subtitle {
   font-size: small;
 }
+
+.title-font-family {
+  font-family: DB Helvethaica X, sans-serif !important;
+}
+
+.heading1-font-family,
+.heading-font-family,
+.title-font-family {
+  line-height: 1.11;
+}
+.text-deep-gray,
+.text-neutral-deep-gray {
+  color: #292626 !important;
+}
+.fs-20px {
+  font-size: 0.8rem !important;
+  font-weight: 700;
+}
+
+.text-middle-gray {
+  color: #545557 !important;
+}
+
+.fs-14px {
+  font-size: 0.875rem !important;
+}
+.m-0 {
+  margin: 0 !important;
+}
+
+.tx-down {
+  color: red !important;
+  font-weight: 500 !important;
+}
+
+.tx-up {
+  color: green !important;
+  font-weight: 500 !important;
+}
+
+.sub-Desc{
+  font-size: 0.55 !important;
+  color: #6e6f70 !important;
+}

@@ -1,5 +1,8 @@
-const numberWithCommas = (value: any) => {
+export function numberWithCommas(value: any) {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-export default numberWithCommas;
+export function numberMilCommas(value: any) {
+    return (value / 1000000).toFixed(2).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
