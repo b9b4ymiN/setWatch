@@ -12,9 +12,9 @@ function FinancialTable({ bodyData, header }: FinancialsTableModel) {
         <tr>
           <td className="tdKeyLeft td-headerCenter pl-3">#</td>
           {header
-            ? header.map((item) => {
+            ? header.map((item, index) => {
                 return (
-                  <td key={"H" + item} className="td-headerCenter">
+                  <td key={"H" + item + index} className="td-headerCenter">
                     {item}
                   </td>
                 );
@@ -26,15 +26,20 @@ function FinancialTable({ bodyData, header }: FinancialsTableModel) {
         <tr>
           {/*38,847,751,291 */}
           <td className="tdKeyLeft td-headerCenter">Revenue</td>
-          {bodyData.map((item) => {
-            return <td>{numberMorBMCommas(item.revenue)}</td>;
+          {bodyData.map((item, index) => {
+            return (
+              <td key={"BR" + index}>{numberMorBMCommas(item.revenue)}</td>
+            );
           })}
         </tr>
         <tr>
           <td className="tdKeyLeft td-headerCenter">Earnings</td>
-          {bodyData.map((item) => {
+          {bodyData.map((item, index) => {
             return (
-              <td className={item.earnings < 0 ? "tx-down" : ""}>
+              <td
+                key={"BE" + index}
+                className={item.earnings < 0 ? "tx-down" : ""}
+              >
                 {numberMorBMCommas(item.earnings)}
               </td>
             );
