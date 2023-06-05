@@ -137,27 +137,33 @@ const IndexPage: NextPage<propType> = (props) => {
 
   const getEarningData = async () => {
     if (props.symbolQ) {
-      const api_link =
-        apiHost + "/stockinfo?stock=" + props.symbolQ + "&mode=earnings";
-      const response = await axios.get<EarningsModel>(api_link);
-      setEarnData(response.data);
+      try {
+        const api_link =
+          apiHost + "/stockinfo?stock=" + props.symbolQ + "&mode=earnings";
+        const response = await axios.get<EarningsModel>(api_link);
+        setEarnData(response.data);
 
-      //Qualterly
-      const qEarning: EarningsActEst[] =
-        response.data.earnings.earningsChart.quarterly;
-      const estData: EarningsActEst = {
-        date:
-          response.data.earnings.earningsChart.currentQuarterEstimateDate +
-          response.data.earnings.earningsChart.currentQuarterEstimateYear.toString(),
-        actual: null,
-        estimate: response.data.earnings.earningsChart.currentQuarterEstimate,
-      };
-      qEarning.push(estData);
-      setDataChartEarning(qEarning);
+        //Qualterly
+        const qEarning: EarningsActEst[] =
+          response.data.earnings.earningsChart.quarterly;
+        const estData: EarningsActEst = {
+          date:
+            response.data.earnings.earningsChart.currentQuarterEstimateDate +
+            response.data.earnings.earningsChart.currentQuarterEstimateYear.toString(),
+          actual: null,
+          estimate: response.data.earnings.earningsChart.currentQuarterEstimate,
+        };
+        qEarning.push(estData);
+        setDataChartEarning(qEarning);
 
-      //Table
-      setBodyFinData(response.data.earnings.financialsChart.quarterly);
-      setBodyFinDataYear(response.data.earnings.financialsChart.yearly);
+        //Table
+        setBodyFinData(response.data.earnings.financialsChart.quarterly);
+        setBodyFinDataYear(response.data.earnings.financialsChart.yearly);
+      } catch {
+        setDataChartEarning([]);
+        setBodyFinData([]);
+        setBodyFinDataYear([]);
+      }
     }
   };
 
@@ -308,7 +314,7 @@ const IndexPage: NextPage<propType> = (props) => {
                     Market Cap.
                   </div>
                   <div className="fs-14px text-middle-gray m-0">
-                    {priceData
+                    {priceData && priceData.marketCap != undefined
                       ? numberMilCommas(priceData.marketCap) + " M."
                       : "-"}
                   </div>
@@ -318,7 +324,7 @@ const IndexPage: NextPage<propType> = (props) => {
                     EV. (Enterprise Value)
                   </div>
                   <div className="fs-14px text-middle-gray m-0">
-                    {defKeyData
+                    {defKeyData && defKeyData.enterpriseValue != undefined
                       ? numberMilCommas(defKeyData.enterpriseValue) + " M."
                       : "-"}
                   </div>
@@ -328,7 +334,7 @@ const IndexPage: NextPage<propType> = (props) => {
                     SharesOut standing
                   </div>
                   <div className="fs-14px text-middle-gray m-0">
-                    {defKeyData
+                    {defKeyData && defKeyData.sharesOutstanding != undefined
                       ? numberWithCommas(defKeyData.sharesOutstanding)
                       : "-"}
                   </div>
@@ -338,7 +344,9 @@ const IndexPage: NextPage<propType> = (props) => {
                     Book Value
                   </div>
                   <div className="fs-14px text-middle-gray m-0">
-                    {defKeyData ? defKeyData.bookValue : "-"}
+                    {defKeyData && defKeyData.bookValue != undefined
+                      ? defKeyData.bookValue
+                      : "-"}
                   </div>
                 </Col>
                 <Col className="p-2" xs={6} md={4}>
@@ -346,7 +354,9 @@ const IndexPage: NextPage<propType> = (props) => {
                     P/BV.
                   </div>
                   <div className="fs-14px text-middle-gray m-0">
-                    {defKeyData ? defKeyData.priceToBook.toFixed(2) : "-"}
+                    {defKeyData && defKeyData.priceToBook != undefined
+                      ? defKeyData.priceToBook.toFixed(2)
+                      : "-"}
                   </div>
                 </Col>
                 <Col className="p-2" xs={6} md={4}>
@@ -354,7 +364,9 @@ const IndexPage: NextPage<propType> = (props) => {
                     PEG Ratio.
                   </div>
                   <div className="fs-14px text-middle-gray m-0">
-                    {defKeyData ? defKeyData.pegRatio.toFixed(2) : "-"}
+                    {defKeyData && defKeyData.pegRatio != undefined
+                      ? defKeyData.pegRatio.toFixed(2)
+                      : "-"}
                   </div>
                 </Col>
                 <Col className="p-2" xs={6} md={4}>
@@ -362,7 +374,9 @@ const IndexPage: NextPage<propType> = (props) => {
                     P/E
                   </div>
                   <div className="fs-14px text-middle-gray m-0">
-                    {sumData ? sumData.trailingPE.toFixed(2) : "-"}
+                    {sumData && sumData.trailingPE != undefined
+                      ? sumData.trailingPE.toFixed(2)
+                      : "-"}
                   </div>
                 </Col>
                 <Col className="p-2" xs={6} md={4}>
@@ -370,7 +384,9 @@ const IndexPage: NextPage<propType> = (props) => {
                     Forword P/E
                   </div>
                   <div className="fs-14px text-middle-gray m-0">
-                    {sumData ? sumData.forwardPE.toFixed(2) : "-"}
+                    {sumData && sumData.forwardPE != undefined
+                      ? sumData.forwardPE.toFixed(2)
+                      : "-"}
                   </div>
                 </Col>
               </Row>
@@ -385,7 +401,7 @@ const IndexPage: NextPage<propType> = (props) => {
                     Dividend Yield
                   </div>
                   <div className="fs-14px text-middle-gray m-0">
-                    {sumData
+                    {sumData && sumData.dividendYield != undefined
                       ? (sumData.dividendYield * 100).toFixed(2) + "%"
                       : "-"}
                   </div>
@@ -396,7 +412,9 @@ const IndexPage: NextPage<propType> = (props) => {
                   </div>
                   <div className="fs-14px text-middle-gray m-0">
                     {sumData
-                      ? sumData.fiveYearAvgDividendYield.toFixed(2) + "%"
+                      ? sumData.fiveYearAvgDividendYield != undefined
+                        ? sumData.fiveYearAvgDividendYield.toFixed(2) + "%"
+                        : "-"
                       : "-"}
                   </div>
                 </Col>
