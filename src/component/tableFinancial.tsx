@@ -14,7 +14,10 @@ function FinancialTable({ bodyData, header }: FinancialsTableModel) {
           {header
             ? header.map((item, index) => {
                 return (
-                  <td key={"H" + item + index} className="td-headerCenter">
+                  <td
+                    key={"H" + item + index.toString()}
+                    className="td-headerCenter"
+                  >
                     {item}
                   </td>
                 );
@@ -28,7 +31,9 @@ function FinancialTable({ bodyData, header }: FinancialsTableModel) {
           <td className="tdKeyLeft td-headerCenter">Revenue</td>
           {bodyData.map((item, index) => {
             return (
-              <td key={"BR" + index}>{numberMorBMCommas(item.revenue)}</td>
+              <td key={"BR" + index.toString()}>
+                {numberMorBMCommas(item.revenue)}
+              </td>
             );
           })}
         </tr>
@@ -37,7 +42,7 @@ function FinancialTable({ bodyData, header }: FinancialsTableModel) {
           {bodyData.map((item, index) => {
             return (
               <td
-                key={"BE" + index}
+                key={"BE" + index.toString()}
                 className={item.earnings < 0 ? "tx-down" : ""}
               >
                 {numberMorBMCommas(item.earnings)}

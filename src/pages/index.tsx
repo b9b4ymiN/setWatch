@@ -195,7 +195,11 @@ const IndexPage: NextPage<propType> = (props) => {
                   onChange={(e) => setSelStockSymbol(e.target.value)}
                 >
                   {props.listSymbol.map((item) => {
-                    return <option value={item}>{item}</option>;
+                    return (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    );
                   })}
                 </Form.Select>
               </Form.Group>
@@ -378,7 +382,7 @@ const IndexPage: NextPage<propType> = (props) => {
                 </Col>
                 <Col className="p-2" xs={6} md={4}>
                   <div className="title-font-family fs-20px text-neutral-deep-gray">
-                  Dividend Yield
+                    Dividend Yield
                   </div>
                   <div className="fs-14px text-middle-gray m-0">
                     {sumData
