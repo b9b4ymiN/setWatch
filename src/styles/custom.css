@@ -45,7 +45,21 @@
   font-weight: 500 !important;
 }
 
-.sub-Desc{
+.sub-Desc {
   font-size: 0.55 !important;
   color: #6e6f70 !important;
+}
+
+.td-headerCenter {
+  font-weight: 500;
+  background-color: #edf5fd !important;
+}
+
+.tableFin {
+  font-size: 0.875rem !important;
+  text-align: center;
+}
+
+.tdKeyLeft {
+  text-align: left !important;
 }

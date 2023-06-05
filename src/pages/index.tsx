@@ -11,6 +11,7 @@ import {
   Form,
   Col,
   Row,
+  Table,
 } from "react-bootstrap";
 //Chart
 import {
@@ -23,24 +24,44 @@ import {
   Area,
   AreaChart,
   ResponsiveContainer,
+  Legend,
+  LabelList,
 } from "recharts";
 
-import { numberMilCommas, numberWithCommas } from "../utils/format";
+import {
+  formatDateDividend,
+  numberMilCommas,
+  numberWithCommas,
+} from "../utils/format";
 
 //Model
 import StockInfoPageModel from "@/models/stockInfoModel";
 import axios from "axios";
-import apiHost from "@/utils/apiconfig";
-import { EarningsModel } from "@/models/earningsModel";
+import { apiHost, apiHostOld } from "@/utils/apiconfig";
+import {
+  EarningsActEst,
+  EarningsInfo,
+  EarningsModel,
+  Quarterly,
+} from "@/models/earningsModel";
 import {
   DefaultKeyStatistics,
   Reply_DefaultKeyStatistics,
 } from "@/models/defaultKeyStatisticsModel";
 import { Reply_QuoteType, QuoteType } from "@/models/quoteTypeModel";
 import { Price, Reply_Price } from "@/models/priceModel";
+import {
+  Reply_SummaryDetail,
+  SummaryDetail,
+} from "@/models/summaryDetailModel";
+import { calPercen } from "@/utils/mathFuntion";
+import FinancialTable from "@/component/tableFinancial";
+import { FinancialsDetailModel } from "@/models/StockInfo/FinancialsTableModel";
+import { symbolList } from "@/models/symbolListModel";
 
 interface propType {
   symbolQ: string;
+  listSymbol: string[];
 }
 
 const IndexPage: NextPage<propType> = (props) => {
@@ -53,15 +74,46 @@ const IndexPage: NextPage<propType> = (props) => {
   const [defKeyData, setDefKeyData] = useState<DefaultKeyStatistics>();
   const [quoteData, setQuoteData] = useState<QuoteType>();
   const [priceData, setPriceData] = useState<Price>();
+  const [sumData, setSumData] = useState<SummaryDetail>();
+  const [earningsMode, setEarningsMode] = useState<string>("Quarterly");
+  //Chart
+  const [dataChartEarning, setDataChartEarning] = useState<EarningsActEst[]>(
+    []
+  );
+  //Table
+  const [bodyFinData, setBodyFinData] = useState<FinancialsDetailModel[]>([]);
+  const [bodyFinDataYear, setBodyFinDataYear] = useState<
+    FinancialsDetailModel[]
+  >([]);
 
   //Component did mount
   useEffect(() => {
     getPrice();
+    getSummaryDetail();
     getKeyInfo();
     getQuoteType();
+    getEarningData();
   }, [router.query]);
 
   //Function information
+  const getPrice = async () => {
+    if (props.symbolQ) {
+      const api_link =
+        apiHost + "/stockinfo?stock=" + props.symbolQ + "&mode=price";
+      const response = await axios.get<Reply_Price>(api_link);
+      setPriceData(response.data.price);
+    }
+  };
+
+  const getSummaryDetail = async () => {
+    if (props.symbolQ) {
+      const api_link =
+        apiHost + "/stockinfo?stock=" + props.symbolQ + "&mode=summaryDetail";
+      const response = await axios.get<Reply_SummaryDetail>(api_link);
+      setSumData(response.data.summaryDetail);
+    }
+  };
+
   const getKeyInfo = async () => {
     if (props.symbolQ) {
       const api_link =
@@ -69,7 +121,6 @@ const IndexPage: NextPage<propType> = (props) => {
         "/stockinfo?stock=" +
         props.symbolQ +
         "&mode=defaultKeyStatistics";
-      console.log("api : ", api_link);
       const response = await axios.get<Reply_DefaultKeyStatistics>(api_link);
       setDefKeyData(response.data.defaultKeyStatistics);
     }
@@ -79,19 +130,34 @@ const IndexPage: NextPage<propType> = (props) => {
     if (props.symbolQ) {
       const api_link =
         apiHost + "/stockinfo?stock=" + props.symbolQ + "&mode=quoteType";
-      console.log("api : ", api_link);
       const response = await axios.get<Reply_QuoteType>(api_link);
       setQuoteData(response.data.quoteType);
     }
   };
 
-  const getPrice = async () => {
+  const getEarningData = async () => {
     if (props.symbolQ) {
       const api_link =
-        apiHost + "/stockinfo?stock=" + props.symbolQ + "&mode=price";
-      console.log("api : ", api_link);
-      const response = await axios.get<Reply_Price>(api_link);
-      setPriceData(response.data.price);
+        apiHost + "/stockinfo?stock=" + props.symbolQ + "&mode=earnings";
+      const response = await axios.get<EarningsModel>(api_link);
+      setEarnData(response.data);
+
+      //Qualterly
+      const qEarning: EarningsActEst[] =
+        response.data.earnings.earningsChart.quarterly;
+      const estData: EarningsActEst = {
+        date:
+          response.data.earnings.earningsChart.currentQuarterEstimateDate +
+          response.data.earnings.earningsChart.currentQuarterEstimateYear.toString(),
+        actual: null,
+        estimate: response.data.earnings.earningsChart.currentQuarterEstimate,
+      };
+      qEarning.push(estData);
+      setDataChartEarning(qEarning);
+
+      //Table
+      setBodyFinData(response.data.earnings.financialsChart.quarterly);
+      setBodyFinDataYear(response.data.earnings.financialsChart.yearly);
     }
   };
 
@@ -105,21 +171,13 @@ const IndexPage: NextPage<propType> = (props) => {
     });
   };
 
-  const data = [
-    { name: "Page A", uv: 400, pv: 2400, amt: 2400 },
-    { name: "Page A", uv: 400, pv: 2400, amt: 2400 },
-  ];
-
   return (
     <>
       <HeaderNav />
       <Container fluid>
-        <h1 className="tx-header">
-          Home
-          <Badge bg="primary">New </Badge>
-        </h1>
+        <h1 className="tx-header">Stock info</h1>
         <Breadcrumb>
-          <Breadcrumb.Item href="#">Home</Breadcrumb.Item>
+          <Breadcrumb.Item href="#">S.Watch</Breadcrumb.Item>
           <Breadcrumb.Item active>Stock info</Breadcrumb.Item>
         </Breadcrumb>
         <Card>
@@ -136,10 +194,9 @@ const IndexPage: NextPage<propType> = (props) => {
                   value={selStockSymbol}
                   onChange={(e) => setSelStockSymbol(e.target.value)}
                 >
-                  <option value="">Please select stock symbol</option>
-                  <option value="SMPC">SMPC</option>
-                  <option value="PTT">PTT</option>
-                  <option value="JMT">JMT</option>
+                  {props.listSymbol.map((item) => {
+                    return <option value={item}>{item}</option>;
+                  })}
                 </Form.Select>
               </Form.Group>
               <Button variant="primary" type="submit">
@@ -205,6 +262,38 @@ const IndexPage: NextPage<propType> = (props) => {
                       : "-"}
                   </div>
                 </Col>
+                <Col className="p-2" xs={6} md={4}>
+                  <div className="title-font-family fs-20px text-neutral-deep-gray">
+                    high 52Week
+                  </div>
+                  <div className="fs-14px text-middle-gray m-0">
+                    {sumData && priceData
+                      ? sumData.fiftyTwoWeekHigh +
+                        " (" +
+                        calPercen(
+                          priceData.regularMarketPrice,
+                          sumData.fiftyTwoWeekHigh
+                        ) +
+                        "%)"
+                      : "-"}
+                  </div>
+                </Col>
+                <Col className="p-2" xs={6} md={4}>
+                  <div className="title-font-family fs-20px text-neutral-deep-gray">
+                    low 52Week
+                  </div>
+                  <div className="fs-14px text-middle-gray m-0">
+                    {sumData && priceData
+                      ? sumData.fiftyTwoWeekLow +
+                        " (" +
+                        calPercen(
+                          sumData.fiftyTwoWeekLow,
+                          priceData.regularMarketPrice
+                        ) +
+                        "%)"
+                      : "-"}
+                  </div>
+                </Col>
               </Row>
               <Row>
                 <hr />
@@ -253,65 +342,189 @@ const IndexPage: NextPage<propType> = (props) => {
                     P/BV.
                   </div>
                   <div className="fs-14px text-middle-gray m-0">
-                    {defKeyData ? defKeyData.priceToBook : "-"}
+                    {defKeyData ? defKeyData.priceToBook.toFixed(2) : "-"}
                   </div>
                 </Col>
                 <Col className="p-2" xs={6} md={4}>
                   <div className="title-font-family fs-20px text-neutral-deep-gray">
-                    P/BV.
+                    PEG Ratio.
                   </div>
                   <div className="fs-14px text-middle-gray m-0">
-                    {defKeyData ? defKeyData.priceToBook : "-"}
+                    {defKeyData ? defKeyData.pegRatio.toFixed(2) : "-"}
+                  </div>
+                </Col>
+                <Col className="p-2" xs={6} md={4}>
+                  <div className="title-font-family fs-20px text-neutral-deep-gray">
+                    P/E
+                  </div>
+                  <div className="fs-14px text-middle-gray m-0">
+                    {sumData ? sumData.trailingPE.toFixed(2) : "-"}
+                  </div>
+                </Col>
+                <Col className="p-2" xs={6} md={4}>
+                  <div className="title-font-family fs-20px text-neutral-deep-gray">
+                    Forword P/E
+                  </div>
+                  <div className="fs-14px text-middle-gray m-0">
+                    {sumData ? sumData.forwardPE.toFixed(2) : "-"}
+                  </div>
+                </Col>
+              </Row>
+              <Row>
+                <Col className="p-2" xs={12}>
+                  <div className="title-font-family fs-20px text-neutral-deep-gray">
+                    Dividend information
+                  </div>
+                </Col>
+                <Col className="p-2" xs={6} md={4}>
+                  <div className="title-font-family fs-20px text-neutral-deep-gray">
+                  Dividend Yield
+                  </div>
+                  <div className="fs-14px text-middle-gray m-0">
+                    {sumData
+                      ? (sumData.dividendYield * 100).toFixed(2) + "%"
+                      : "-"}
+                  </div>
+                </Col>
+                <Col className="p-2" xs={6} md={4}>
+                  <div className="title-font-family fs-20px text-neutral-deep-gray">
+                    Yield (Avg.5Y)
+                  </div>
+                  <div className="fs-14px text-middle-gray m-0">
+                    {sumData
+                      ? sumData.fiveYearAvgDividendYield.toFixed(2) + "%"
+                      : "-"}
+                  </div>
+                </Col>
+                <Col className="p-2" xs={12}>
+                  <div className="title-font-family fs-20px text-neutral-deep-gray">
+                    Last dividend date
+                  </div>
+                  <div className="fs-14px text-middle-gray m-0">
+                    {sumData ? formatDateDividend(sumData.exDividendDate) : "-"}
                   </div>
                 </Col>
               </Row>
             </Container>
           </Card.Body>
         </Card>
+        {/* Chart Earning  card */}
         <Card className="mt-3">
           <Card.Body>
-            <Card.Title className="tx-header">Earnings</Card.Title>
-            <Card.Subtitle className="mb-2 text-muted tx-subtitle">
-              Stock <Badge>{selStockSymbol}</Badge> earning information.
-            </Card.Subtitle>
-            <div className="col-12 chartBody">
-              <ResponsiveContainer width="100%" height={400}>
-                <AreaChart
-                  height={250}
-                  data={data}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                >
-                  <defs>
-                    <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#8884d8" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorPv" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#82ca9d" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="uv"
-                    stroke="#8884d8"
-                    fillOpacity={1}
-                    fill="url(#colorUv)"
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="pv"
-                    stroke="#82ca9d"
-                    fillOpacity={1}
-                    fill="url(#colorPv)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+            <Row>
+              <Col xs={12}>
+                <Card.Title className="tx-header">
+                  <div style={{ display: "block" }}>
+                    <div style={{ float: "left" }}>
+                      Earning Inforamtions
+                      <br />
+                      <span className="mb-2 text-muted tx-subtitle">
+                        Stock <Badge>{selStockSymbol}</Badge> Highlight and
+                        current information.
+                      </span>
+                    </div>
+                    <Button
+                      style={{ float: "right" }}
+                      variant={
+                        earningsMode == "Quarterly" ? "primary" : "success"
+                      }
+                      type="submit"
+                      onClick={() =>
+                        setEarningsMode(
+                          earningsMode == "Quarterly" ? "Yearly" : "Quarterly"
+                        )
+                      }
+                    >
+                      {earningsMode}
+                    </Button>
+                  </div>
+                </Card.Title>
+              </Col>
+              <Col xs={12} className="mt-3 chartBody">
+                <div className="title-font-family fs-20px text-neutral-deep-gray">
+                  Quarterly Earning Chart ( EPS act/est value ).
+                </div>
+                <ResponsiveContainer width="100%" height={250}>
+                  <AreaChart
+                    data={dataChartEarning}
+                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id="colorEst" x1="0" y1="0" x2="0" y2="1">
+                        <stop
+                          offset="5%"
+                          stopColor="#8884d8"
+                          stopOpacity={0.8}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#8884d8"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                      <linearGradient id="colorAct" x1="0" y1="0" x2="0" y2="1">
+                        <stop
+                          offset="5%"
+                          stopColor="#82ca9d"
+                          stopOpacity={0.8}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#82ca9d"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <XAxis fontSize={10} dataKey="date" />
+                    <YAxis
+                      fontSize={10}
+                      type="number"
+                      domain={["dataMax + 0.2"]}
+                    />
+                    <CartesianGrid strokeDasharray="2 2" />
+                    <Tooltip />
+                    <Legend verticalAlign="top" height={30} />
+                    <Area
+                      type="monotone"
+                      dataKey="estimate"
+                      stroke="#8884d8"
+                      fillOpacity={0.2}
+                      fill="url(#colorEst)"
+                      activeDot={{ strokeWidth: 2, r: 5 }}
+                    ></Area>
+                    <Area
+                      type="monotone"
+                      dataKey="actual"
+                      stroke="#82ca9d"
+                      fillOpacity={0.8}
+                      fill="url(#colorAct)"
+                    >
+                      <LabelList
+                        dataKey="actual"
+                        position="top"
+                        fontSize={10}
+                        color="#82ca9d"
+                      />
+                    </Area>
+                  </AreaChart>
+                </ResponsiveContainer>
+              </Col>
+              <Col className="mt-2">
+                <div className="title-font-family fs-20px text-neutral-deep-gray">
+                  Financials Info.
+                </div>
+                <FinancialTable
+                  header={
+                    earningsMode == "Quarterly"
+                      ? bodyFinData.map((x) => x.date)
+                      : bodyFinDataYear.map((x) => x.date.toString())
+                  }
+                  bodyData={
+                    earningsMode == "Quarterly" ? bodyFinData : bodyFinDataYear
+                  }
+                />
+              </Col>
+            </Row>
           </Card.Body>
         </Card>
       </Container>
@@ -320,8 +533,14 @@ const IndexPage: NextPage<propType> = (props) => {
 };
 
 IndexPage.getInitialProps = async (ctx: NextPageContext) => {
+  const link = apiHostOld + "/listSymbol";
+
+  const json: string[] = await axios.get<symbolList[]>(link).then((res) => {
+    return res.data.map((el) => el.symbol);
+  });
+
   const { symbol } = ctx.query;
-  return { symbolQ: symbol ? symbol.toString() : "" };
+  return { symbolQ: symbol ? symbol.toString() : "", listSymbol: json };
 };
 
 export default IndexPage;

@@ -32,4 +32,6 @@ export interface DefaultKeyStatistics {
     SandP52WeekChange: number
     lastDividendValue: number
     lastDividendDate: string
+    pegRatio: number
+    forwardPE: number
 }

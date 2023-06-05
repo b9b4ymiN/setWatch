@@ -11,13 +11,23 @@ export interface Earnings {
 }
 
 export interface EarningsChart {
-    quarterly: any[]
-    earningsDate: any[]
+    quarterly: EarningsActEst[]
+    earningsDate: EarningsActEst[]
+    currentQuarterEstimate: number
+    currentQuarterEstimateDate: string
+    currentQuarterEstimateYear: number
+
+}
+
+export interface EarningsActEst {
+    date: string,
+    actual: number | null,
+    estimate: number | null,
 }
 
 export interface FinancialsChart {
-    yearly: Yearly[]
-    quarterly: Quarterly[]
+    yearly: EarningsInfo[]
+    quarterly: EarningsInfo[]
 }
 
 export interface Yearly {
@@ -27,6 +37,12 @@ export interface Yearly {
 }
 
 export interface Quarterly {
+    date: string
+    revenue: number
+    earnings: number
+}
+
+export interface EarningsInfo {
     date: string
     revenue: number
     earnings: number

@@ -1,3 +1,7 @@
+export interface Reply_SummaryDetail {
+    summaryDetail: SummaryDetail;
+}
+
 export interface SummaryDetail {
     maxAge: number
     priceHint: number
@@ -16,6 +20,7 @@ export interface SummaryDetail {
     fiveYearAvgDividendYield: number
     beta: number
     trailingPE: number
+    forwardPE: number
     volume: number
     regularMarketVolume: number
     averageVolume: number
