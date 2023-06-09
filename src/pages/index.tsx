@@ -357,7 +357,7 @@ const IndexPage: NextPage<propType> = (props) => {
                       </div>
                     </Col>
                   </Row>
-                  <Row>
+                  <Row  className="mt-2">
                     <hr />
                   </Row>
                   <Row>
@@ -442,7 +442,7 @@ const IndexPage: NextPage<propType> = (props) => {
                       </div>
                     </Col>
                   </Row>
-                  <Row>
+                  <Row  className="mt-2">
                     <hr />
                   </Row>
                   <Row>
