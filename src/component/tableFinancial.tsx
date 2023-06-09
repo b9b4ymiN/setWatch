@@ -75,7 +75,7 @@ function FinancialTable({ bodyData, header, equity }: FinancialsTableModel) {
               } else {
                 return (
                   <td
-                    key={"GEPS" + index.toString()}
+                    key={"Growth" + index.toString()}
                     className={item.earnings < 0 ? "tx-down" : ""}
                   >
                     {calPercen(
