@@ -15,10 +15,7 @@ function FinancialTable({ bodyData, header, equity }: FinancialsTableModel) {
           {header
             ? header.map((item, index) => {
                 return (
-                  <td
-                    key={"H" + item + index.toString()}
-                    className="td-headerCenter"
-                  >
+                  <td key={"Header-" + index.toString()} className="td-headerCenter">
                     {item}
                   </td>
                 );
@@ -32,7 +29,7 @@ function FinancialTable({ bodyData, header, equity }: FinancialsTableModel) {
           <td className="tdKeyLeft td-headerCenter">Revenue</td>
           {bodyData.map((item, index) => {
             return (
-              <td key={"BR" + index.toString()}>{numberCmp(item.revenue)}</td>
+              <td key={"Revenue-" + index.toString()}>{numberCmp(item.revenue)}</td>
             );
           })}
         </tr>
@@ -41,7 +38,7 @@ function FinancialTable({ bodyData, header, equity }: FinancialsTableModel) {
           {bodyData.map((item, index) => {
             return (
               <td
-                key={"BE" + index.toString()}
+                key={"Earnings-" + index.toString()}
                 className={item.earnings < 0 ? "tx-down" : ""}
               >
                 {numberCmp(item.earnings)}
@@ -55,7 +52,7 @@ function FinancialTable({ bodyData, header, equity }: FinancialsTableModel) {
             {bodyData.map((item, index) => {
               return (
                 <td
-                  key={"EPS" + index.toString()}
+                  key={"eps-" + index.toString()}
                   className={item.earnings < 0 ? "tx-down" : ""}
                 >
                   {number3F(item.earnings / equity)}
@@ -71,11 +68,11 @@ function FinancialTable({ bodyData, header, equity }: FinancialsTableModel) {
             <td className="tdKeyLeft td-headerCenter">EPS (%Growth)</td>
             {bodyData.map((item, index) => {
               if (index == 0) {
-                return <td></td>;
+                return <td key={"GrowthIndex"}></td>;
               } else {
                 return (
                   <td
-                    key={"Growth" + index.toString()}
+                    key={"Growth-" + index.toString()}
                     className={item.earnings < 0 ? "tx-down" : ""}
                   >
                     {calPercen(
