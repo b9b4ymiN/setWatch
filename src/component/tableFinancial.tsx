@@ -2,10 +2,11 @@ import {
   FinancialsDetailModel,
   FinancialsTableModel,
 } from "@/models/StockInfo/FinancialsTableModel";
-import { numberMilCommas, numberMorBMCommas } from "@/utils/format";
+import { number3F, numberCmp } from "@/utils/format";
+import { calPercen } from "@/utils/mathFuntion";
 import { Table } from "react-bootstrap";
 
-function FinancialTable({ bodyData, header }: FinancialsTableModel) {
+function FinancialTable({ bodyData, header, equity }: FinancialsTableModel) {
   return (
     <Table striped bordered hover size="sm" className="tableFin mt-2">
       <thead>
@@ -31,9 +32,7 @@ function FinancialTable({ bodyData, header }: FinancialsTableModel) {
           <td className="tdKeyLeft td-headerCenter">Revenue</td>
           {bodyData.map((item, index) => {
             return (
-              <td key={"BR" + index.toString()}>
-                {numberMorBMCommas(item.revenue)}
-              </td>
+              <td key={"BR" + index.toString()}>{numberCmp(item.revenue)}</td>
             );
           })}
         </tr>
@@ -45,11 +44,52 @@ function FinancialTable({ bodyData, header }: FinancialsTableModel) {
                 key={"BE" + index.toString()}
                 className={item.earnings < 0 ? "tx-down" : ""}
               >
-                {numberMorBMCommas(item.earnings)}
+                {numberCmp(item.earnings)}
               </td>
             );
           })}
         </tr>
+        {equity && equity != 0 ? (
+          <tr>
+            <td className="tdKeyLeft td-headerCenter">EPS</td>
+            {bodyData.map((item, index) => {
+              return (
+                <td
+                  key={"EPS" + index.toString()}
+                  className={item.earnings < 0 ? "tx-down" : ""}
+                >
+                  {number3F(item.earnings / equity)}
+                </td>
+              );
+            })}
+          </tr>
+        ) : (
+          <></>
+        )}
+        {equity && equity != 0 ? (
+          <tr>
+            <td className="tdKeyLeft td-headerCenter">EPS (%Growth)</td>
+            {bodyData.map((item, index) => {
+              if (index == 0) {
+                return <td></td>;
+              } else {
+                return (
+                  <td
+                    key={"GEPS" + index.toString()}
+                    className={item.earnings < 0 ? "tx-down" : ""}
+                  >
+                    {calPercen(
+                      bodyData[index - 1].earnings / equity,
+                      item.earnings / equity
+                    ) + "%"}
+                  </td>
+                );
+              }
+            })}
+          </tr>
+        ) : (
+          <></>
+        )}
       </tbody>
     </Table>
   );

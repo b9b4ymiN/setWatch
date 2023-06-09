@@ -1,3 +1,29 @@
+export function numberCmp(value: number) {
+    const usformatter = Intl.NumberFormat("en-US", {
+        notation: "compact",
+        compactDisplay: "short",
+        maximumFractionDigits: 2,
+    });
+    return usformatter.format(value);
+}
+
+export function number3F(value: number) {
+    const usformatter = Intl.NumberFormat("en-US", {
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3
+    });
+    return usformatter.format(value);
+}
+
+export function numberPercen3D(value: number) {
+    const usformatter = Intl.NumberFormat("en-US", {
+        style: 'percent',
+        minimumFractionDigits: 3,
+        maximumFractionDigits: 3
+    });
+    return usformatter.format(value);
+}
+
 export function numberWithCommas(value: any) {
     return value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }

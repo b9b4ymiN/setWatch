@@ -32,7 +32,9 @@ import Lottie from "react-lottie";
 
 import {
   formatDateDividend,
+  number3F,
   numberMilCommas,
+  numberPercen3D,
   numberWithCommas,
 } from "../utils/format";
 
@@ -61,6 +63,15 @@ import FinancialTable from "@/component/tableFinancial";
 import { FinancialsDetailModel } from "@/models/StockInfo/FinancialsTableModel";
 import { symbolList } from "@/models/symbolListModel";
 import { Replay_AllQuoteModel } from "@/models/allQuoteModel";
+import {
+  BalanceSheetHistory,
+  BalanceSheetStatement,
+} from "@/models/balanceSheetHistoryModel";
+import { calDE, calROIC } from "@/utils/financialFomula";
+import {
+  IncomeStatementHistory,
+  IncomeStatementHistory2,
+} from "@/models/incomeStatementHistoryModel";
 
 interface propType {
   symbolQ: string;
@@ -84,13 +95,14 @@ const IndexPage: NextPage<propType> = (props) => {
   const router = useRouter();
 
   //State proprety
-  const [selStockSymbol, setSelStockSymbol] = useState<string>("SMPC");
+  const [selStockSymbol, setSelStockSymbol] = useState<string>(props.symbolQ);
   const [earnData, setEarnData] = useState<EarningsModel>();
   const [defKeyData, setDefKeyData] = useState<DefaultKeyStatistics>();
   const [quoteData, setQuoteData] = useState<QuoteType>();
   const [priceData, setPriceData] = useState<Price>();
   const [sumData, setSumData] = useState<SummaryDetail>();
   const [earningsMode, setEarningsMode] = useState<string>("Quarterly");
+  const [bsDataYearly, setBsDataYearly] = useState<BalanceSheetStatement>();
   //Chart
   const [dataChartEarning, setDataChartEarning] = useState<EarningsActEst[]>(
     []
@@ -100,14 +112,12 @@ const IndexPage: NextPage<propType> = (props) => {
   const [bodyFinDataYear, setBodyFinDataYear] = useState<
     FinancialsDetailModel[]
   >([]);
+  const [incomeDataYear, setIncomeDataYear] =
+    useState<IncomeStatementHistory2[]>();
 
   //Component did mount
   useEffect(() => {
     getAllQuteStock();
-    //getPrice();
-    //getSummaryDetail();
-    //getKeyInfo();
-    //getQuoteType();
     getEarningData();
   }, [router.query]);
 
@@ -124,7 +134,8 @@ const IndexPage: NextPage<propType> = (props) => {
         "summaryDetail",
         "defaultKeyStatistics",
         "quoteType",
-        "earnings",
+        "balanceSheetHistory",
+        "incomeStatementHistory",
       ],
     });
     if (response != null) {
@@ -132,48 +143,24 @@ const IndexPage: NextPage<propType> = (props) => {
       setSumData(response.data.summaryDetail);
       setDefKeyData(response.data.defaultKeyStatistics);
       setQuoteData(response.data.quoteType);
+      if (response.data.balanceSheetHistory != null) {
+        setBsDataYearly(
+          response.data.balanceSheetHistory.balanceSheetStatements.sort(
+            (a, b) => b.endDate.localeCompare(a.endDate)
+          )[0]
+        );
+      }
+
+      if (response.data.incomeStatementHistory != null) {
+        setIncomeDataYear(
+          response.data.incomeStatementHistory.incomeStatementHistory.sort(
+            (a, b) => b.endDate.localeCompare(a.endDate)
+          )
+        );
+      }
     }
     await delayTime(1000);
     setLoading(false);
-  };
-
-  const getPrice = async () => {
-    if (props.symbolQ) {
-      const api_link =
-        apiHost + "/stockinfo?stock=" + props.symbolQ + "&mode=price";
-      const response = await axios.get<Reply_Price>(api_link);
-      setPriceData(response.data.price);
-    }
-  };
-
-  const getSummaryDetail = async () => {
-    if (props.symbolQ) {
-      const api_link =
-        apiHost + "/stockinfo?stock=" + props.symbolQ + "&mode=summaryDetail";
-      const response = await axios.get<Reply_SummaryDetail>(api_link);
-      setSumData(response.data.summaryDetail);
-    }
-  };
-
-  const getKeyInfo = async () => {
-    if (props.symbolQ) {
-      const api_link =
-        apiHost +
-        "/stockinfo?stock=" +
-        props.symbolQ +
-        "&mode=defaultKeyStatistics";
-      const response = await axios.get<Reply_DefaultKeyStatistics>(api_link);
-      setDefKeyData(response.data.defaultKeyStatistics);
-    }
-  };
-
-  const getQuoteType = async () => {
-    if (props.symbolQ) {
-      const api_link =
-        apiHost + "/stockinfo?stock=" + props.symbolQ + "&mode=quoteType";
-      const response = await axios.get<Reply_QuoteType>(api_link);
-      setQuoteData(response.data.quoteType);
-    }
   };
 
   const getEarningData = async () => {
@@ -316,7 +303,16 @@ const IndexPage: NextPage<propType> = (props) => {
                       <div className="title-font-family fs-20px text-neutral-deep-gray">
                         Change Percent
                       </div>
-                      <div className="fs-14px text-middle-gray m-0">
+                      <div
+                        className={
+                          "fs-14px text-middle-gray m-0 " +
+                          (priceData
+                            ? priceData.regularMarketChangePercent > 0
+                              ? "tx-up"
+                              : "tx-down"
+                            : "")
+                        }
+                      >
                         {priceData
                           ? (
                               priceData.regularMarketChangePercent * 100
@@ -357,7 +353,7 @@ const IndexPage: NextPage<propType> = (props) => {
                       </div>
                     </Col>
                   </Row>
-                  <Row  className="mt-2">
+                  <Row className="mt-2">
                     <hr />
                   </Row>
                   <Row>
@@ -442,13 +438,16 @@ const IndexPage: NextPage<propType> = (props) => {
                       </div>
                     </Col>
                   </Row>
-                  <Row  className="mt-2">
+                  <Row className="mt-2">
                     <hr />
                   </Row>
                   <Row>
                     <Col className="p-2" xs={12}>
-                      <div className="title-font-family fs-20px text-neutral-deep-gray">
-                        Dividend information
+                      <div
+                        className="title-font-family fs-20px text-neutral-deep-gray"
+                        style={{ fontWeight: 700 }}
+                      >
+                        <u>Dividend information</u>
                       </div>
                     </Col>
                     <Col className="p-2" xs={6} md={4}>
@@ -480,6 +479,99 @@ const IndexPage: NextPage<propType> = (props) => {
                       <div className="fs-14px text-middle-gray m-0">
                         {sumData
                           ? formatDateDividend(sumData.exDividendDate)
+                          : "-"}
+                      </div>
+                    </Col>
+                  </Row>
+                  <Row className="mt-2">
+                    <hr />
+                  </Row>
+                  <Row>
+                    <Col className="p-2" xs={12}>
+                      <div
+                        className="title-font-family fs-20px text-neutral-deep-gray"
+                        style={{ fontWeight: 700 }}
+                      >
+                        <u>Financial information</u>
+                      </div>
+                    </Col>
+                    <Col className="p-2" xs={6} md={4}>
+                      <div className="title-font-family fs-20px text-neutral-deep-gray">
+                        D/E
+                      </div>
+                      <div className="fs-14px text-middle-gray m-0">
+                        {bsDataYearly
+                          ? number3F(
+                              calDE(
+                                bsDataYearly.totalLiab
+                                  ? bsDataYearly.totalLiab
+                                  : 0,
+                                bsDataYearly.totalStockholderEquity
+                                  ? bsDataYearly.totalStockholderEquity
+                                  : 0
+                              )
+                            )
+                          : "-"}
+                      </div>
+                    </Col>
+                    <Col className="p-2" xs={6} md={4}>
+                      <div className="title-font-family fs-20px text-neutral-deep-gray">
+                        ROE
+                      </div>
+                      <div className="fs-14px text-middle-gray m-0">
+                        {incomeDataYear && bsDataYearly
+                          ? numberPercen3D(
+                              calDE(
+                                incomeDataYear[0].netIncome
+                                  ? incomeDataYear[0].netIncome
+                                  : 0,
+                                bsDataYearly.totalStockholderEquity
+                                  ? bsDataYearly.totalStockholderEquity
+                                  : 0
+                              )
+                            )
+                          : "-"}
+                      </div>
+                    </Col>
+                    <Col className="p-2" xs={6} md={4}>
+                      <div className="title-font-family fs-20px text-neutral-deep-gray">
+                        ROA
+                      </div>
+                      <div className="fs-14px text-middle-gray m-0">
+                        {incomeDataYear && bsDataYearly
+                          ? numberPercen3D(
+                              calDE(
+                                incomeDataYear[0].netIncome
+                                  ? incomeDataYear[0].netIncome
+                                  : 0,
+                                bsDataYearly.totalAssets
+                                  ? bsDataYearly.totalAssets
+                                  : 0
+                              )
+                            )
+                          : "-"}
+                      </div>
+                    </Col>
+                    <Col className="p-2" xs={6} md={4}>
+                      <div className="title-font-family fs-20px text-neutral-deep-gray">
+                        ROIC
+                      </div>
+                      <div className="fs-14px text-middle-gray m-0">
+                        {incomeDataYear && bsDataYearly
+                          ? calROIC(
+                              bsDataYearly.totalLiab
+                                ? bsDataYearly.totalLiab
+                                : 0,
+                              bsDataYearly.totalCurrentLiabilities
+                                ? bsDataYearly.totalCurrentLiabilities
+                                : 0,
+                              incomeDataYear[0].ebit
+                                ? incomeDataYear[0].ebit
+                                : 0,
+                              bsDataYearly.totalStockholderEquity
+                                ? bsDataYearly.totalStockholderEquity
+                                : 0
+                            )
                           : "-"}
                       </div>
                     </Col>
@@ -617,6 +709,7 @@ const IndexPage: NextPage<propType> = (props) => {
                           ? bodyFinData
                           : bodyFinDataYear
                       }
+                      equity={defKeyData ? defKeyData.sharesOutstanding : null}
                     />
                   </Col>
                 </Row>
