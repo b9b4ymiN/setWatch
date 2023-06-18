@@ -72,6 +72,8 @@ import {
   IncomeStatementHistory,
   IncomeStatementHistory2,
 } from "@/models/incomeStatementHistoryModel";
+import { detailStockListModel } from "@/models/detailStockModel";
+import HistoricalCompare from "@/component/historicalCompare";
 
 interface propType {
   symbolQ: string;
@@ -115,10 +117,11 @@ const IndexPage: NextPage<propType> = (props) => {
   const [incomeDataYear, setIncomeDataYear] =
     useState<IncomeStatementHistory2[]>();
 
+  const [detailList, setDetailList] = useState<detailStockListModel>();
+
   //Component did mount
   useEffect(() => {
     getAllQuteStock();
-    getEarningData();
   }, [router.query]);
 
   //Function information
@@ -159,8 +162,36 @@ const IndexPage: NextPage<propType> = (props) => {
         );
       }
     }
+    await getEarningData();
+    //await getDetailStockList();
     await delayTime(1000);
     setLoading(false);
+  };
+
+  const getDetailStockList = async () => {
+    const api_link =
+      "https://anlze-api.vercel.app/api2/fbGrowthData?stock=" + props.symbolQ;
+
+    const response = await axios.get<detailStockListModel>(api_link);
+    if (response != null) {
+      setDetailList(response.data);
+      let data =
+        earningsMode === "Quarterly"
+          ? response.data.quarterly
+          : response.data.yearly;
+
+      let chartModel: EarningsActEst[] = data.map((x) => {
+        return {
+          date: x.keyValue,
+          estimate: null,
+          actual: x.EarningPerShare == undefined ? null : x.EarningPerShare,
+        };
+      });
+
+      console.log(chartModel);
+
+      setDataChartEarning(chartModel);
+    }
   };
 
   const getEarningData = async () => {
@@ -715,6 +746,11 @@ const IndexPage: NextPage<propType> = (props) => {
                 </Row>
               </Card.Body>
             </Card>
+            <HistoricalCompare
+              symbol={props.symbolQ}
+              mode={earningsMode}
+              detail={detailList}
+            />
           </Container>
         </>
       )}
