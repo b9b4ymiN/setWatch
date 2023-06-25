@@ -169,29 +169,31 @@ const IndexPage: NextPage<propType> = (props) => {
   };
 
   const getDetailStockList = async () => {
-    const api_link =
-      "https://anlze-api.vercel.app/api2/fbGrowthData?stock=" + props.symbolQ;
+    try {
+      const api_link =
+        "https://anlze-api.vercel.app/api2/fbGrowthData?stock=" + props.symbolQ;
 
-    const response = await axios.get<detailStockListModel>(api_link);
-    if (response != null) {
-      setDetailList(response.data);
-      let data =
-        earningsMode === "Quarterly"
-          ? response.data.quarterly
-          : response.data.yearly;
+      const response = await axios.get<detailStockListModel>(api_link);
+      if (response != null) {
+        setDetailList(response.data);
+        let data =
+          earningsMode === "Quarterly"
+            ? response.data.quarterly
+            : response.data.yearly;
 
-      let chartModel: EarningsActEst[] = data.map((x) => {
-        return {
-          date: x.keyValue,
-          estimate: null,
-          actual: x.EarningPerShare == undefined ? null : x.EarningPerShare,
-        };
-      });
+        let chartModel: EarningsActEst[] = data.map((x) => {
+          return {
+            date: x.keyValue,
+            estimate: null,
+            actual: x.EarningPerShare == undefined ? null : x.EarningPerShare,
+          };
+        });
 
-      //console.log(chartModel);
+        //console.log(chartModel);
 
-      //setDataChartEarning(chartModel);
-    }
+        //setDataChartEarning(chartModel);
+      }
+    } catch {}
   };
 
   const getEarningData = async () => {
