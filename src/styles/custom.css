@@ -37,12 +37,16 @@
 
 .tx-down {
   color: red !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
 }
 
 .tx-up {
   color: green !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
+}
+
+.bg-up {
+  background-color: chartreuse !important;
 }
 
 .sub-Desc {
@@ -60,6 +64,16 @@
   text-align: center;
 }
 
+.tableFin td {
+  font-weight: 500;
+  font-size: 0.675rem !important;
+}
+
+.tableCompare {
+  font-size: 0.675rem !important;
+  text-align: center;
+}
+
 .tdKeyLeft {
   text-align: left !important;
 }
@@ -74,4 +88,8 @@
   text-align: center;
   color: #7f7f7f;
   font-family: Arial, Helvetica, sans-serif;
+}
+
+.trcYear {
+  background-color: beige;
 }

@@ -163,7 +163,7 @@ const IndexPage: NextPage<propType> = (props) => {
       }
     }
     await getEarningData();
-    //await getDetailStockList();
+    await getDetailStockList();
     await delayTime(1000);
     setLoading(false);
   };
@@ -188,9 +188,9 @@ const IndexPage: NextPage<propType> = (props) => {
         };
       });
 
-      console.log(chartModel);
+      //console.log(chartModel);
 
-      setDataChartEarning(chartModel);
+      //setDataChartEarning(chartModel);
     }
   };
 
