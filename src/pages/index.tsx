@@ -33,6 +33,7 @@ import Lottie from "react-lottie";
 import {
   formatDateDividend,
   number3F,
+  numberCmp,
   numberMilCommas,
   numberPercen3D,
   numberWithCommas,
@@ -72,7 +73,7 @@ import {
   IncomeStatementHistory,
   IncomeStatementHistory2,
 } from "@/models/incomeStatementHistoryModel";
-import { detailStockListModel } from "@/models/detailStockModel";
+import { ListModel, detailStockListModel } from "@/models/detailStockModel";
 import HistoricalCompare from "@/component/historicalCompare";
 
 interface propType {
@@ -118,6 +119,8 @@ const IndexPage: NextPage<propType> = (props) => {
     useState<IncomeStatementHistory2[]>();
 
   const [detailList, setDetailList] = useState<detailStockListModel>();
+  const [companyCash, setCompanyCash] = useState<number>(0);
+  const [cashPStock, setCashPStock] = useState<number>(0);
 
   //Component did mount
   useEffect(() => {
@@ -181,17 +184,19 @@ const IndexPage: NextPage<propType> = (props) => {
             ? response.data.quarterly
             : response.data.yearly;
 
-        let chartModel: EarningsActEst[] = data.map((x) => {
-          return {
-            date: x.keyValue,
-            estimate: null,
-            actual: x.EarningPerShare == undefined ? null : x.EarningPerShare,
-          };
-        });
-
-        //console.log(chartModel);
-
-        //setDataChartEarning(chartModel);
+        //ListModel
+        let lastQual: ListModel =
+          response.data.quarterly[response.data.quarterly.length - 1];
+        console.log("lastQual", lastQual);
+        setCompanyCash(lastQual.Cash);
+        if (
+          lastQual.Cash != null &&
+          lastQual.Cash != undefined &&
+          lastQual.PaidUpCapital != null &&
+          lastQual.PaidUpCapital != undefined
+        ) {
+          setCashPStock(lastQual.Cash / lastQual.PaidUpCapital);
+        }
       }
     } catch {}
   };
@@ -460,7 +465,7 @@ const IndexPage: NextPage<propType> = (props) => {
                           : "-"}
                       </div>
                     </Col>
-                    <Col className="p-2" xs={6} md={4}>
+                    <Col className="p-2" xs={6} md={6}>
                       <div className="title-font-family fs-20px text-neutral-deep-gray">
                         Forword P/E
                       </div>
@@ -470,7 +475,45 @@ const IndexPage: NextPage<propType> = (props) => {
                           : "-"}
                       </div>
                     </Col>
+                    <Col className="p-2" xs={6} md={4}>
+                      <div className="title-font-family fs-20px text-neutral-deep-gray">
+                        CompanyCash
+                      </div>
+                      <div className="fs-14px text-middle-gray m-0">
+                        {companyCash != undefined
+                          ? numberCmp(companyCash)
+                          : "-"}
+                      </div>
+                    </Col>
+                    <Col className="p-2" xs={6} md={6}>
+                      <div className="title-font-family fs-20px text-neutral-deep-gray">
+                        Cash/Stock
+                      </div>
+                      <div
+                        className={
+                          "fs-14px text-middle-gray m-0" +
+                          (priceData &&
+                          cashPStock > priceData.regularMarketChangePercent
+                            ? " tx-up"
+                            : "")
+                        }
+                      >
+                        {cashPStock != undefined ? cashPStock.toFixed(2) : "-"}
+                      </div>
+                    </Col>
+                    <Col className="p-2" xs={12} md={6}>
+                      <div className="title-font-family fs-20px text-neutral-deep-gray">
+                        Remark <Badge bg="info">(Cash/Stock)</Badge>
+                      </div>
+                      <div className={"fs-12px  text-middle-gray m-0"}>
+                        <span>
+                          Compare cash with total share stock in safe if current
+                          price less than this value
+                        </span>
+                      </div>
+                    </Col>
                   </Row>
+
                   <Row className="mt-2">
                     <hr />
                   </Row>
