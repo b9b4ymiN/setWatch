@@ -119,6 +119,7 @@ const IndexPage: NextPage<propType> = (props) => {
     useState<IncomeStatementHistory2[]>();
 
   const [detailList, setDetailList] = useState<detailStockListModel>();
+  const [lastQualter, setLastQualter] = useState<ListModel>();
   const [companyCash, setCompanyCash] = useState<number>(0);
   const [cashPStock, setCashPStock] = useState<number>(0);
 
@@ -187,6 +188,7 @@ const IndexPage: NextPage<propType> = (props) => {
         //ListModel
         let lastQual: ListModel =
           response.data.quarterly[response.data.quarterly.length - 1];
+        setLastQualter(lastQual);
         console.log("lastQual", lastQual);
         setCompanyCash(lastQual.Cash);
         if (
@@ -244,6 +246,21 @@ const IndexPage: NextPage<propType> = (props) => {
   };
 
   const [loading, setLoading] = useState(false);
+
+  const GetClassUpDown = (
+    last: ListModel | undefined,
+    price: Price | undefined
+  ) => {
+    if (last && price) {
+      const remain = last.Cash - last.TotalDebt;
+      const cash2Stock = remain / last.PaidUpCapital;
+
+      console.info("cash : " + cash2Stock);
+      if (price.regularMarketPrice > cash2Stock)
+        return "fs-14px text-middle-gray m-0  tx-down";
+      else return "fs-14px text-middle-gray m-0  tx-up";
+    } else return "";
+  };
 
   return (
     <>
@@ -422,6 +439,8 @@ const IndexPage: NextPage<propType> = (props) => {
                       <div className="fs-14px text-middle-gray m-0">
                         {defKeyData && defKeyData.sharesOutstanding != undefined
                           ? numberWithCommas(defKeyData.sharesOutstanding)
+                          : lastQualter
+                          ? numberWithCommas(lastQualter.PaidUpCapital)
                           : "-"}
                       </div>
                     </Col>
@@ -493,12 +512,44 @@ const IndexPage: NextPage<propType> = (props) => {
                         className={
                           "fs-14px text-middle-gray m-0" +
                           (priceData &&
-                          cashPStock > priceData.regularMarketChangePercent
+                          cashPStock > priceData.regularMarketPrice
                             ? " tx-up"
-                            : "")
+                            : " tx-down")
                         }
                       >
-                        {cashPStock != undefined ? cashPStock.toFixed(2) : "-"}
+                        {cashPStock != undefined
+                          ? cashPStock.toFixed(2) + " THB"
+                          : "-"}
+                      </div>
+                    </Col>
+                    <Col className="p-2" xs={6} md={4}>
+                      <div className="title-font-family fs-20px text-neutral-deep-gray">
+                        Total Debt
+                      </div>
+                      <div className="fs-14px text-middle-gray m-0">
+                        {lastQualter ? numberCmp(lastQualter.TotalDebt) : "-"}
+                      </div>
+                    </Col>
+                    <Col className="p-2" xs={6} md={6}>
+                      <div className="title-font-family fs-20px text-neutral-deep-gray">
+                        Real Cash price
+                      </div>
+                      <div className={GetClassUpDown(lastQualter, priceData)}>
+                        {lastQualter
+                          ? (
+                              (lastQualter.Cash - lastQualter.TotalDebt) /
+                              lastQualter.PaidUpCapital
+                            ).toFixed(2) + " THB"
+                          : "-"}
+                        {" ("}
+                        {priceData && lastQualter
+                          ? calPercen(
+                              priceData?.regularMarketPrice,
+                              (lastQualter.Cash - lastQualter.TotalDebt) /
+                                lastQualter.PaidUpCapital
+                            )
+                          : ""}
+                        {"%)"}
                       </div>
                     </Col>
                     <Col className="p-2" xs={12} md={6}>
